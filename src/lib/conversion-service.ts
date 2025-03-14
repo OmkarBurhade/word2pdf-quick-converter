@@ -25,13 +25,13 @@ export async function convertWordToPdf(file: File): Promise<Blob> {
           const pdf = new jsPDF();
           
           // Add a title to the PDF
-          pdf.setFontSize(16);
-          pdf.text('Converted Document', 20, 20);
+          // pdf.setFontSize(16);
+          // pdf.text('Converted Document', 20, 20);
           
           // Add file information
-          pdf.setFontSize(12);
-          pdf.text(`Original filename: ${file.name}`, 20, 30);
-          pdf.text(`Converted on: ${new Date().toLocaleString()}`, 20, 40);
+          // pdf.setFontSize(12);
+          // pdf.text(`Original filename: ${file.name}`, 20, 30);
+          // pdf.text(`Converted on: ${new Date().toLocaleString()}`, 20, 40);
           
           // Add the extracted content
           pdf.setFontSize(10);
