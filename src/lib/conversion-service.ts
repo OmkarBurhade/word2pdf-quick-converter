@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
@@ -14,52 +13,66 @@ export async function convertWordToPdf(file: File): Promise<Blob> {
       
       reader.onload = async function() {
         try {
-          // Extract text from Word document using mammoth
+          // Extract HTML content from Word document with all formatting preserved
           const arrayBuffer = reader.result as ArrayBuffer;
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          const extractedText = result.value;
+          const result = await mammoth.convertToHtml({ arrayBuffer });
+          const htmlContent = result.value;
           
-          console.log("Extracted content length:", extractedText.length);
+          console.log("Extracted HTML content length:", htmlContent.length);
           
-          // Create a new PDF document
-          const pdf = new jsPDF();
+          // Create a new PDF document with proper dimensions
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "pt",
+            format: "a4"
+          });
           
-          // Add a title to the PDF
-          // pdf.setFontSize(16);
-          // pdf.text('Converted Document', 20, 20);
+          // Create a temporary container to render the HTML
+          const container = document.createElement('div');
+          container.innerHTML = htmlContent;
           
-          // Add file information
-          // pdf.setFontSize(12);
-          // pdf.text(`Original filename: ${file.name}`, 20, 30);
-          // pdf.text(`Converted on: ${new Date().toLocaleString()}`, 20, 40);
+          // Apply basic styling to make tables and other elements appear correctly
+          container.querySelectorAll('table').forEach(table => {
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.querySelectorAll('td, th').forEach(cell => {
+              (cell as HTMLElement).style.border = '1px solid #ddd';
+              (cell as HTMLElement).style.padding = '8px';
+            });
+          });
           
-          // Add the extracted content
-          pdf.setFontSize(10);
+          // Process images if any
+          const images = container.querySelectorAll('img');
+          const imagePromises = Array.from(images).map((img) => {
+            return new Promise<void>((imgResolve) => {
+              // If image has a data URI, it's already embedded
+              if (img.src.startsWith('data:')) {
+                imgResolve();
+                return;
+              }
+              
+              // Otherwise, make sure images are properly sized
+              img.style.maxWidth = '100%';
+              imgResolve();
+            });
+          });
           
-          // Split text into lines to fit the PDF page width
-          const maxWidth = 180; // max width in points
-          const fontSize = 10;
-          const lineHeight = fontSize * 0.5;
+          // Wait for all images to be processed
+          await Promise.all(imagePromises);
           
-          // Function to add text with proper wrapping
-          const addWrappedText = (text: string, x: number, y: number) => {
-            const lines = pdf.splitTextToSize(text, maxWidth);
-            pdf.text(lines, x, y);
-            return y + (lines.length * lineHeight);
-          };
-          
-          // Add the content with a margin
-          let yPosition = 50;
-          
-          if (extractedText.length > 0) {
-            yPosition = addWrappedText(extractedText, 20, yPosition);
-          } else {
-            yPosition = addWrappedText("No text content could be extracted from this document.", 20, yPosition);
-          }
-          
-          // Get the PDF as a blob
-          const pdfBlob = pdf.output('blob');
-          resolve(pdfBlob);
+          // Use html2canvas or other solutions for complex documents
+          // For this implementation, we'll use jsPDF's HTML rendering capability
+          pdf.html(container, {
+            callback: function(pdf) {
+              // Get the PDF as a blob
+              const pdfBlob = pdf.output('blob');
+              resolve(pdfBlob);
+            },
+            x: 15,
+            y: 15,
+            width: 565, // A4 width minus margins
+            windowWidth: 675 // Width reference for element rendering
+          });
         } catch (error) {
           console.error('Error in PDF generation:', error);
           reject(error);
