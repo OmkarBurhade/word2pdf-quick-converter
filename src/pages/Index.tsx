@@ -15,6 +15,7 @@ const Index = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [convertedPdf, setConvertedPdf] = useState<Blob | null>(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [conversionError, setConversionError] = useState<string | null>(null);
 
   // Accepted file types
   const acceptedFileTypes = ['.doc', '.docx', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -22,6 +23,7 @@ const Index = () => {
   const handleFileSelected = (file: File) => {
     setSelectedFile(file);
     setConvertedPdf(null);
+    setConversionError(null);
     
     toast.info('File Selected', {
       description: `"${file.name}" has been selected.`,
@@ -38,6 +40,7 @@ const Index = () => {
 
     try {
       setIsConverting(true);
+      setConversionError(null);
       
       toast.info('Conversion Started', {
         description: 'Converting your document. Please wait...',
@@ -54,8 +57,15 @@ const Index = () => {
       downloadPdf(pdfBlob, selectedFile.name);
     } catch (error) {
       console.error('Conversion error:', error);
+      
+      let errorMessage = 'There was an error converting your document.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        setConversionError(errorMessage);
+      }
+      
       toast.error('Conversion Failed', {
-        description: 'There was an error converting your document.',
+        description: errorMessage,
       });
     } finally {
       setIsConverting(false);
@@ -103,6 +113,16 @@ const Index = () => {
                     fileName={selectedFile.name}
                     fileSize={selectedFile.size}
                   />
+                </div>
+              )}
+              
+              {conversionError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-600">
+                  <p className="font-medium">Conversion Error:</p>
+                  <p>{conversionError}</p>
+                  <p className="mt-2 text-xs">
+                    Make sure you're uploading a valid Word document (.doc or .docx format).
+                  </p>
                 </div>
               )}
               
