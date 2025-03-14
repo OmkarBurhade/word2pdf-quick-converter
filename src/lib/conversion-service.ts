@@ -1,33 +1,55 @@
 
 import { toast } from "sonner";
 import { saveAs } from 'file-saver';
+import { jsPDF } from "jspdf";
 
-// We will be using the docx2pdf library for the actual conversion,
-// but for this demo, we're simulating the conversion process
+// We will be using a simple PDF generation approach for this demo
 export async function convertWordToPdf(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     try {
-      // Normally we would use a proper conversion library here
+      // Log the conversion process
       console.log(`Converting file: ${file.name}, size: ${file.size} bytes`);
       
       // For demonstration purposes, we're using a timeout to simulate processing
-      // In a real application, we'd use a proper conversion library
       setTimeout(async () => {
         try {
-          // For now, we simply rename the file extension from .docx to .pdf
-          // without actually converting the content
-          // In a real application, we'd convert the actual content
+          // Create a new PDF document
+          const pdf = new jsPDF();
           
-          // Simulate success
+          // Read the file content (in a real app, we would parse the DOCX content)
           const reader = new FileReader();
+          
           reader.onload = function() {
-            // Create a new blob with the same content but different type
-            const blob = new Blob([reader.result as ArrayBuffer], { type: 'application/pdf' });
-            resolve(blob);
+            try {
+              // Add a title to the PDF
+              pdf.setFontSize(16);
+              pdf.text('Converted Document', 20, 20);
+              
+              // Add file information
+              pdf.setFontSize(12);
+              pdf.text(`Original filename: ${file.name}`, 20, 30);
+              pdf.text(`File size: ${(file.size / 1024).toFixed(2)} KB`, 20, 40);
+              pdf.text(`Converted on: ${new Date().toLocaleString()}`, 20, 50);
+              
+              // Add a note about the demo
+              pdf.setFontSize(10);
+              pdf.text('Note: This is a demonstration of PDF conversion. In a production environment,', 20, 70);
+              pdf.text('the actual content of your Word document would be parsed and converted properly.', 20, 80);
+              
+              // Get the PDF as a blob
+              const pdfBlob = pdf.output('blob');
+              resolve(pdfBlob);
+            } catch (error) {
+              console.error('Error generating PDF:', error);
+              reject(error);
+            }
           };
+          
           reader.onerror = function() {
             reject(new Error('Error reading file'));
           };
+          
+          // Start reading the file
           reader.readAsArrayBuffer(file);
         } catch (error) {
           console.error('Error in conversion process:', error);
