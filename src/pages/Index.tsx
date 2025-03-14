@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { FileText, Shield, Zap, Lock } from 'lucide-react';
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 import FileDropzone from '@/components/FileDropzone';
 import ConversionButton from '@/components/ConversionButton';

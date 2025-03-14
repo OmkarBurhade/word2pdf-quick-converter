@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { saveAs } from 'file-saver';
 
 // We will be using the docx2pdf library for the actual conversion,
